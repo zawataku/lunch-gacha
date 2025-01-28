@@ -5,7 +5,7 @@ const HISTORY_KEY = "gacha_history";
 export const saveToHistory = (item: any) => {
     const history = getHistory();
     history.push(item);
-    Cookies.set(HISTORY_KEY, JSON.stringify(history), { expires: 7 });
+    Cookies.set(HISTORY_KEY, JSON.stringify(history));
 };
 
 export const getHistory = (): any[] => {
