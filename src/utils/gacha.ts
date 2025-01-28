@@ -6,7 +6,6 @@ export interface GachaItem {
     name: string;
     description: string;
     imgpath: string;
-    probability: number;
     rarity: string;
 }
 
@@ -16,16 +15,39 @@ export const fetchGachaItems = async (): Promise<GachaItem[]> => {
 };
 
 export const performGacha = (items: GachaItem[]): GachaItem => {
-    const totalWeight = items.reduce((sum, item) => sum + item.probability, 0);
-    const randomValue = Math.random() * totalWeight;
-    let cumulative = 0;
+    // 1. レアリティの確率定義（固定）
+    const rarityProbabilities: { [key: string]: number } = {
+        "ノーマル": 70,
+        "レア": 25,
+        "Sレア": 4,
+        "SSレア": 1,
+    };
 
-    for (const item of items) {
-        cumulative += item.probability;
-        if (randomValue <= cumulative) {
-            return item;
+    // 2. レアリティの抽選
+    const rarityEntries = Object.entries(rarityProbabilities);
+    const totalRarityWeight = 100;
+    const rarityRandomValue = Math.random() * totalRarityWeight;
+
+    let cumulativeRarity = 0;
+    let selectedRarity = "";
+
+    for (const [rarity, probability] of rarityEntries) {
+        cumulativeRarity += probability;
+        if (rarityRandomValue <= cumulativeRarity) {
+            selectedRarity = rarity;
+            break;
         }
     }
 
-    throw new Error("Gacha failed");
+    if (!selectedRarity) {
+        throw new Error("レアリティの抽選に失敗しました");
+    }
+
+    const selectedItems = items.filter(item => item.rarity === selectedRarity);
+    if (selectedItems.length === 0) {
+        throw new Error(`選ばれたレアリティ(${selectedRarity})にアイテムがありません`);
+    }
+
+    const randomIndex = Math.floor(Math.random() * selectedItems.length);
+    return selectedItems[randomIndex];
 };
