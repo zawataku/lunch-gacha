@@ -1,18 +1,20 @@
-"use client";
-
 import { useEffect, useState } from "react";
 import { fetchGachaItems, performGacha, GachaItem } from "@/utils/gacha";
 import { saveToHistory, getHistory, clearHistory } from "@/utils/cookies";
 
-export default function GachaPage() {
+export default function App() {
   const [items, setItems] = useState<GachaItem[]>([]);
   const [history, setHistory] = useState<GachaItem[]>([]);
   const [result, setResult] = useState<GachaItem | null>(null);
 
   useEffect(() => {
     const loadItems = async () => {
-      const gachaItems = await fetchGachaItems();
-      setItems(gachaItems);
+      try {
+        const gachaItems = await fetchGachaItems();
+        setItems(gachaItems);
+      } catch (error) {
+        console.error("Failed to fetch items:", error);
+      }
     };
 
     loadItems();
@@ -21,17 +23,21 @@ export default function GachaPage() {
 
   const handleGacha = () => {
     if (items.length > 0) {
-      const selectedItem = performGacha(items);
-      setResult(selectedItem);
-      saveToHistory(selectedItem);
-      setHistory(getHistory());
+      try {
+        const selectedItem = performGacha(items);
+        setResult(selectedItem);
+        saveToHistory(selectedItem);
+        setHistory(getHistory());
 
-      setTimeout(() => {
-        const modal = document.getElementById("gacha_modal") as HTMLDialogElement;
-        if (modal) {
-          modal.showModal();
-        }
-      }, 0);
+        setTimeout(() => {
+          const modal = document.getElementById("gacha_modal") as HTMLDialogElement;
+          if (modal) {
+            modal.showModal();
+          }
+        }, 0);
+      } catch (error) {
+        console.error("Gacha failed:", error);
+      }
     }
   };
 
@@ -53,7 +59,7 @@ export default function GachaPage() {
           >
             ガチャる
           </button>
-          <a
+          <button
             onClick={() => {
               const modal = document.getElementById("gacha_ratio_modal") as HTMLDialogElement | null;
               if (modal) {
@@ -63,7 +69,7 @@ export default function GachaPage() {
             className="link"
           >
             提供割合
-          </a>
+          </button>
         </div>
 
         <dialog id="gacha_ratio_modal" className="modal">
@@ -107,8 +113,8 @@ export default function GachaPage() {
           <dialog id="gacha_modal" className="modal">
             <div className="modal-box">
               <div className="flex flex-col items-center gap-4">
-                <img src={result.imgpath} alt={result.name} className="size-32" />
-                <p className="text-xl font-bold">{result.name}（{result.rarity}）</p>
+                <img src={result.img.url} alt={result.name} className="size-32" />
+                <p className="text-xl font-bold">{result.name}（{result.rarity[0]}）</p>
                 <p>{result.description}</p>
                 <p className="font-bold"></p>
               </div>
@@ -129,8 +135,8 @@ export default function GachaPage() {
                   <div className="flex flex-col gap-4">
                     {history.map((item, index) => (
                       <div key={index} className="flex items-center gap-4">
-                        <img src={item.imgpath} alt={item.name} className="size-16" />
-                        <p>{item.name}</p>
+                        <img src={item.img.url} alt={item.name} className="size-16" />
+                        <p>{item.name}（{item.rarity[0]}）</p>
                       </div>
                     ))}
                   </div>

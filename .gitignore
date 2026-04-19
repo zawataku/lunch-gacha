@@ -42,3 +42,6 @@ next-env.d.ts
 
 # admin page
 src/app/admin/*
+
+public/foods
+/dist

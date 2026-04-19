@@ -1,17 +1,22 @@
-import { collection, getDocs } from "firebase/firestore";
-import { db } from "@/firebase";
+import { client } from "@/microcms";
 
 export interface GachaItem {
     id: string;
     name: string;
     description: string;
-    imgpath: string;
-    rarity: string;
+    img: {
+        url: string;
+        width?: number;
+        height?: number;
+    };
+    rarity: string[];
 }
 
 export const fetchGachaItems = async (): Promise<GachaItem[]> => {
-    const snapshot = await getDocs(collection(db, "items"));
-    return snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() } as GachaItem));
+    const res = await client.getList<GachaItem>({
+        endpoint: "items",
+    });
+    return res.contents;
 };
 
 export const performGacha = (items: GachaItem[]): GachaItem => {
@@ -43,7 +48,8 @@ export const performGacha = (items: GachaItem[]): GachaItem => {
         throw new Error("レアリティの抽選に失敗しました");
     }
 
-    const selectedItems = items.filter(item => item.rarity === selectedRarity);
+    // アイテム側のrarity配列の最初の要素で判定
+    const selectedItems = items.filter(item => item.rarity[0] === selectedRarity);
     if (selectedItems.length === 0) {
         throw new Error(`選ばれたレアリティ(${selectedRarity})にアイテムがありません`);
     }
