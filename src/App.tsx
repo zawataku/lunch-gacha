@@ -1,27 +1,25 @@
 import { useEffect, useState } from "react";
-import { fetchGachaItems, performGacha, GachaItem } from "@/utils/gacha";
 import { saveToHistory, getHistory, clearHistory } from "@/utils/cookies";
 
+export interface GachaItem {
+  id: string;
+  name: string;
+  description: string;
+  img?: {
+    url: string;
+  };
+  rarity?: string[];
+}
+
 export default function App() {
-  const [items, setItems] = useState<GachaItem[]>([]);
   const [history, setHistory] = useState<GachaItem[]>([]);
   const [result, setResult] = useState<GachaItem | null>(null);
   const [isSpinning, setIsSpinning] = useState(false);
   const [animationKey, setAnimationKey] = useState(0);
 
-  const GACHA_ANIMATION_TIME = 4700;
+  const GACHA_ANIMATION_TIME = 3000;
 
   useEffect(() => {
-    const loadItems = async () => {
-      try {
-        const gachaItems = await fetchGachaItems();
-        setItems(gachaItems);
-      } catch (error) {
-        console.error("Failed to fetch items:", error);
-      }
-    };
-
-    loadItems();
     setHistory(getHistory());
   }, []);
 
@@ -31,29 +29,28 @@ export default function App() {
     setResult(null);
 
     try {
-      // 通信とアニメーション待機を並列実行
-      const [latestItems] = await Promise.all([
-        fetchGachaItems(),
+      const [response] = await Promise.all([
+        fetch("/api/gacha"),
         new Promise((resolve) => setTimeout(resolve, GACHA_ANIMATION_TIME)),
       ]);
 
-      setItems(latestItems);
-
-      if (latestItems.length > 0) {
-        const selectedItem = performGacha(latestItems);
-        setResult(selectedItem);
-        saveToHistory(selectedItem);
-        setHistory(getHistory());
-
-        setIsSpinning(false);
-
-        setTimeout(() => {
-          const modal = document.getElementById("gacha_modal") as HTMLDialogElement;
-          if (modal) {
-            modal.showModal();
-          }
-        }, 100);
+      if (!response.ok) {
+        throw new Error("Failed to fetch gacha result");
       }
+
+      const selectedItem: GachaItem = await response.json();
+      setResult(selectedItem);
+      saveToHistory(selectedItem);
+      setHistory(getHistory());
+
+      setIsSpinning(false);
+
+      setTimeout(() => {
+        const modal = document.getElementById("gacha_modal") as HTMLDialogElement;
+        if (modal) {
+          modal.showModal();
+        }
+      }, 100);
     } catch (error) {
       console.error("Gacha failed:", error);
       setIsSpinning(false);
@@ -107,6 +104,7 @@ export default function App() {
           )}
         </div>
 
+        {/* 提供割合モーダル */}
         <dialog id="gacha_ratio_modal" className="modal">
           <div className="modal-box">
             <div className="flex flex-col items-center gap-4">
@@ -132,12 +130,15 @@ export default function App() {
           </form>
         </dialog>
 
+        {/* ガチャ結果モーダル */}
         {result && (
           <dialog id="gacha_modal" className="modal">
             <div className="modal-box">
               <div className="flex flex-col items-center gap-4">
-                <img src={result.img.url} alt={result.name} className="size-32" />
-                <p className="text-xl font-bold">{result.name}（{result.rarity[0]}）</p>
+                {result.img?.url && (
+                  <img src={result.img.url} alt={result.name} className="size-32" />
+                )}
+                <p className="text-xl font-bold">{result.name}（{result.rarity?.[0] || "不明"}）</p>
                 <p className="text-center">{result.description}</p>
               </div>
             </div>
@@ -147,6 +148,7 @@ export default function App() {
           </dialog>
         )}
 
+        {/* 履歴セクション */}
         <div className="mt-8">
           <div className="collapse collapse-arrow bg-base-300">
             <input type="checkbox" />
@@ -157,10 +159,14 @@ export default function App() {
                   <div className="flex flex-col gap-4">
                     {history.map((item, index) => (
                       <div key={index} className="flex items-center gap-4 border-b border-base-200 pb-2 last:border-0">
-                        <img src={item.img.url} alt={item.name} className="size-16 rounded object-cover" />
+                        {item.img?.url ? (
+                          <img src={item.img.url} alt={item.name} className="size-16 rounded object-cover" />
+                        ) : (
+                          <div className="size-16 rounded bg-gray-200 flex items-center justify-center text-xs text-gray-500">No Image</div>
+                        )}
                         <div>
-                          <p className="font-bold">{item.name}</p>
-                          <p className="text-sm opacity-70">{item.rarity[0]}</p>
+                          <p className="font-bold">{item.name || "不明な料理"}</p>
+                          <p className="text-sm opacity-70">{item.rarity?.[0] || "不明"}</p>
                         </div>
                       </div>
                     ))}
