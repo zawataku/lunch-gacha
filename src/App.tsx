@@ -6,6 +6,10 @@ export default function App() {
   const [items, setItems] = useState<GachaItem[]>([]);
   const [history, setHistory] = useState<GachaItem[]>([]);
   const [result, setResult] = useState<GachaItem | null>(null);
+  const [isSpinning, setIsSpinning] = useState(false);
+  const [animationKey, setAnimationKey] = useState(0);
+
+  const GACHA_ANIMATION_TIME = 4700;
 
   useEffect(() => {
     const loadItems = async () => {
@@ -21,23 +25,39 @@ export default function App() {
     setHistory(getHistory());
   }, []);
 
-  const handleGacha = () => {
-    if (items.length > 0) {
-      try {
-        const selectedItem = performGacha(items);
+  const handleGacha = async () => {
+    setAnimationKey(Date.now());
+    setIsSpinning(true);
+    setResult(null);
+
+    try {
+      // 通信とアニメーション待機を並列実行
+      const [latestItems] = await Promise.all([
+        fetchGachaItems(),
+        new Promise((resolve) => setTimeout(resolve, GACHA_ANIMATION_TIME)),
+      ]);
+
+      setItems(latestItems);
+
+      if (latestItems.length > 0) {
+        const selectedItem = performGacha(latestItems);
         setResult(selectedItem);
         saveToHistory(selectedItem);
         setHistory(getHistory());
+
+        setIsSpinning(false);
 
         setTimeout(() => {
           const modal = document.getElementById("gacha_modal") as HTMLDialogElement;
           if (modal) {
             modal.showModal();
           }
-        }, 0);
-      } catch (error) {
-        console.error("Gacha failed:", error);
+        }, 100);
       }
+    } catch (error) {
+      console.error("Gacha failed:", error);
+      setIsSpinning(false);
+      alert("通信に失敗しました。もう一度お試しください。");
     }
   };
 
@@ -52,24 +72,39 @@ export default function App() {
 
         <h1 className="mb-8 text-center text-4xl font-bold">昼ごはんガチャ</h1>
         <div className="flex flex-col items-center gap-3">
-          <img src="/gacha.png" alt="ガチャガチャの画像" className="w-40" />
+          <div className="flex h-64 items-center justify-center">
+            {isSpinning ? (
+              <img
+                src={`/gacha.gif?t=${animationKey}`}
+                alt="ガチャを回しています"
+                className="w-64"
+              />
+            ) : (
+              <img src="/gacha.png" alt="ガチャガチャの画像" className="w-64" />
+            )}
+          </div>
+
           <button
             onClick={handleGacha}
-            className="btn btn-primary btn-lg text-2xl text-white"
+            disabled={isSpinning}
+            className={`btn btn-primary btn-lg text-2xl text-white ${isSpinning ? "loading" : ""}`}
           >
-            ガチャる
+            {isSpinning ? "" : "ガチャる"}
           </button>
-          <button
-            onClick={() => {
-              const modal = document.getElementById("gacha_ratio_modal") as HTMLDialogElement | null;
-              if (modal) {
-                modal.showModal();
-              }
-            }}
-            className="link"
-          >
-            提供割合
-          </button>
+
+          {!isSpinning && (
+            <button
+              onClick={() => {
+                const modal = document.getElementById("gacha_ratio_modal") as HTMLDialogElement | null;
+                if (modal) {
+                  modal.showModal();
+                }
+              }}
+              className="link mt-2"
+            >
+              提供割合
+            </button>
+          )}
         </div>
 
         <dialog id="gacha_ratio_modal" className="modal">
@@ -84,22 +119,10 @@ export default function App() {
                   </tr>
                 </thead>
                 <tbody>
-                  <tr>
-                    <td>SSレア</td>
-                    <td>1%</td>
-                  </tr>
-                  <tr>
-                    <td>Sレア</td>
-                    <td>4%</td>
-                  </tr>
-                  <tr>
-                    <td>レア</td>
-                    <td>15%</td>
-                  </tr>
-                  <tr>
-                    <td>ノーマル</td>
-                    <td>80%</td>
-                  </tr>
+                  <tr><td>SSレア</td><td>1%</td></tr>
+                  <tr><td>Sレア</td><td>4%</td></tr>
+                  <tr><td>レア</td><td>15%</td></tr>
+                  <tr><td>ノーマル</td><td>80%</td></tr>
                 </tbody>
               </table>
             </div>
@@ -115,8 +138,7 @@ export default function App() {
               <div className="flex flex-col items-center gap-4">
                 <img src={result.img.url} alt={result.name} className="size-32" />
                 <p className="text-xl font-bold">{result.name}（{result.rarity[0]}）</p>
-                <p>{result.description}</p>
-                <p className="font-bold"></p>
+                <p className="text-center">{result.description}</p>
               </div>
             </div>
             <form method="dialog" className="modal-backdrop">
@@ -125,7 +147,7 @@ export default function App() {
           </dialog>
         )}
 
-        <div className="mt-4">
+        <div className="mt-8">
           <div className="collapse collapse-arrow bg-base-300">
             <input type="checkbox" />
             <div className="collapse-title text-xl font-bold">ガチャ履歴</div>
@@ -134,23 +156,26 @@ export default function App() {
                 <>
                   <div className="flex flex-col gap-4">
                     {history.map((item, index) => (
-                      <div key={index} className="flex items-center gap-4">
-                        <img src={item.img.url} alt={item.name} className="size-16" />
-                        <p>{item.name}（{item.rarity[0]}）</p>
+                      <div key={index} className="flex items-center gap-4 border-b border-base-200 pb-2 last:border-0">
+                        <img src={item.img.url} alt={item.name} className="size-16 rounded object-cover" />
+                        <div>
+                          <p className="font-bold">{item.name}</p>
+                          <p className="text-sm opacity-70">{item.rarity[0]}</p>
+                        </div>
                       </div>
                     ))}
                   </div>
-                  <div className="mt-4 flex justify-center">
+                  <div className="mt-6 flex justify-center">
                     <button
                       onClick={handleClearHistory}
-                      className="btn btn-error text-white"
+                      className="btn btn-error btn-sm text-white"
                     >
                       ガチャ履歴をクリア
                     </button>
                   </div>
                 </>
               ) : (
-                <p>履歴がありません。</p>
+                <p className="py-4 text-center">履歴がありません。</p>
               )}
             </div>
           </div>
