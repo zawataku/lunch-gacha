@@ -1,0 +1,13 @@
+@import "./styles/GenJyuuGothicX-Regular.css";
+@import "./styles/GenJyuuGothicX-Bold.css";
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+* {
+    font-family: 'GenJyuuGothicX', sans-serif;
+    font-weight: 500;
+    font-style: normal;
+    box-sizing: border-box;
+}
