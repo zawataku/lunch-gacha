@@ -65,9 +65,9 @@ export default function App() {
 
   return (
     <main className="flex min-h-[101vh] flex-col items-center justify-center bg-base-200 p-8">
-      <div className="relative w-full max-w-2xl rounded-xl bg-white p-4 shadow-lg md:p-12">
+      <div className="relative flex flex-col gap-5 w-full max-w-2xl rounded-xl bg-white px-4 py-12 shadow-lg md:px-12">
 
-        <h1 className="mb-8 text-center text-4xl font-bold">昼ごはんガチャ</h1>
+        <h1 className="text-center text-2xl font-bold md:text-4xl">昼ごはんガチャ</h1>
         <div className="flex flex-col items-center gap-3">
           <div className="flex h-64 items-center justify-center">
             {isSpinning ? (
@@ -119,8 +119,8 @@ export default function App() {
                 <tbody>
                   <tr><td>SSレア</td><td>1%</td></tr>
                   <tr><td>Sレア</td><td>4%</td></tr>
-                  <tr><td>レア</td><td>15%</td></tr>
-                  <tr><td>ノーマル</td><td>80%</td></tr>
+                  <tr><td>レア</td><td>25%</td></tr>
+                  <tr><td>ノーマル</td><td>70%</td></tr>
                 </tbody>
               </table>
             </div>
@@ -149,41 +149,39 @@ export default function App() {
         )}
 
         {/* 履歴セクション */}
-        <div className="mt-8">
-          <div className="collapse collapse-arrow bg-base-300">
-            <input type="checkbox" />
-            <div className="collapse-title text-xl font-bold">ガチャ履歴</div>
-            <div className="collapse-content">
-              {history.length > 0 ? (
-                <>
-                  <div className="flex flex-col gap-4">
-                    {history.map((item, index) => (
-                      <div key={index} className="flex items-center gap-4 border-b border-base-200 pb-2 last:border-0">
-                        {item.img?.url ? (
-                          <img src={item.img.url} alt={item.name} className="size-16 rounded object-cover" />
-                        ) : (
-                          <div className="size-16 rounded bg-gray-200 flex items-center justify-center text-xs text-gray-500">No Image</div>
-                        )}
-                        <div>
-                          <p className="font-bold">{item.name || "不明な料理"}</p>
-                          <p className="text-sm opacity-70">{item.rarity?.[0] || "不明"}</p>
-                        </div>
+        <div className="collapse collapse-arrow bg-base-300">
+          <input type="checkbox" />
+          <div className="collapse-title text-lg md:text-xl font-bold">ガチャ履歴</div>
+          <div className="collapse-content">
+            {history.length > 0 ? (
+              <>
+                <div className="flex flex-col gap-4">
+                  {history.map((item, index) => (
+                    <div key={index} className="flex items-center gap-4 border-b border-base-200 pb-2 last:border-0">
+                      {item.img?.url ? (
+                        <img src={item.img.url} alt={item.name} className="size-16 rounded object-cover" />
+                      ) : (
+                        <div className="size-16 rounded bg-gray-200 flex items-center justify-center text-xs text-gray-500">No Image</div>
+                      )}
+                      <div>
+                        <p className="font-bold">{item.name || "不明な料理"}</p>
+                        <p className="text-sm opacity-70">{item.rarity?.[0] || "不明"}</p>
                       </div>
-                    ))}
-                  </div>
-                  <div className="mt-6 flex justify-center">
-                    <button
-                      onClick={handleClearHistory}
-                      className="btn btn-error btn-sm text-white"
-                    >
-                      ガチャ履歴をクリア
-                    </button>
-                  </div>
-                </>
-              ) : (
-                <p className="py-4 text-center">履歴がありません。</p>
-              )}
-            </div>
+                    </div>
+                  ))}
+                </div>
+                <div className="mt-6 flex justify-center">
+                  <button
+                    onClick={handleClearHistory}
+                    className="btn btn-error btn-sm text-white"
+                  >
+                    ガチャ履歴をクリア
+                  </button>
+                </div>
+              </>
+            ) : (
+              <p className="py-4 text-center">履歴がありません。</p>
+            )}
           </div>
         </div>
       </div>
