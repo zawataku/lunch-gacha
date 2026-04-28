@@ -58,9 +58,8 @@ const performGacha = (items: GachaItem[]): GachaItem => {
     const itemRarity = item.rarity?.[0]?.trim();
     return itemRarity === selectedRarity;
   });
-  
+
   if (selectedItems.length === 0) {
-    // フォールバック: 全アイテムからランダム
     return items[Math.floor(Math.random() * items.length)];
   }
 
@@ -81,7 +80,6 @@ app.get("/api/gacha", async (req, res) => {
     }
 
     const result = performGacha(items);
-    // 結果の1件だけを返す
     res.json(result);
   } catch (error) {
     console.error("Gacha Error:", error);
@@ -90,7 +88,7 @@ app.get("/api/gacha", async (req, res) => {
 });
 
 // Serve static files from the Vite build directory
-const distPath = path.join(__dirname, "../dist");
+const distPath = path.resolve(__dirname, "../dist");
 app.use(express.static(distPath));
 
 // Handle SPA routing

@@ -1,31 +1,33 @@
-# Build Stage
-FROM node:20-alpine AS build
-
+# --- Build Stage ---
+FROM node:lts-alpine AS builder
 WORKDIR /app
 
+# 依存関係をインストール
 COPY package*.json ./
-RUN npm install
+RUN npm ci
 
+# 全ファイルをコピーしてビルドを実行
 COPY . .
 RUN npm run build
 
-# Final Stage
-FROM node:20-alpine
-
+# --- Production Stage ---
+FROM node:lts-alpine
 WORKDIR /app
 
+ENV NODE_ENV=production
+
+# 本番用の依存関係のみインストール
 COPY package*.json ./
-RUN npm install --omit=dev
+RUN npm ci --omit=dev
 
-# ビルドしたフロントエンド資産とサーバーコードをコピー
-COPY --from=build /app/dist ./dist
-COPY --from=build /app/server ./server
-# tsx を使用して TypeScript のサーバーを実行するため devDependencies の一部が必要ですが、
-# ここではシンプルに tsx を production に含めるか、ビルドするか検討します。
-# 軽量化のため、tsx をグローバルにインストールするか、ビルドステージでJSに変換するのが一般的です。
+# ビルド済みファイルとサーバーコードをコピー
+COPY --from=builder /app/dist ./dist
+COPY server ./server
 
+# サーバー実行用に tsx をインストール
 RUN npm install -g tsx
 
 EXPOSE 8080
 
+# サーバを起動
 CMD ["tsx", "server/index.ts"]
