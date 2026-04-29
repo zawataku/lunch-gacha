@@ -59,12 +59,17 @@ const performGacha = (items: GachaItem[]): GachaItem => {
     return itemRarity === selectedRarity;
   });
 
+  console.log(`Gacha Start - Total items: ${items.length}, Selected Rarity: ${selectedRarity}, Found: ${selectedItems.length}`);
+
   if (selectedItems.length === 0) {
+    console.warn(`No items found for rarity: ${selectedRarity}. Falling back to random selection from all items.`);
     return items[Math.floor(Math.random() * items.length)];
   }
 
   const randomIndex = Math.floor(Math.random() * selectedItems.length);
-  return selectedItems[randomIndex];
+  const result = selectedItems[randomIndex];
+  console.log(`Gacha Result: ${result.name} (${selectedRarity})`);
+  return result;
 };
 
 // API Endpoint
@@ -72,6 +77,9 @@ app.get("/api/gacha", async (req, res) => {
   try {
     const response = await client.getList<GachaItem>({
       endpoint: "items",
+      queries: {
+        limit: 100,
+      },
     });
     const items = response.contents;
 
