@@ -10,7 +10,7 @@ export const GachaHistory: React.FC<GachaHistoryProps> = ({ history, onClear }) 
   return (
     <div className="collapse collapse-arrow bg-base-300">
       <input type="checkbox" />
-      <div className="collapse-title text-lg md:text-xl font-bold">ガチャ履歴</div>
+      <div className="collapse-title text-lg md:text-xl font-bold">ガチャ履歴（直近10件）</div>
       <div className="collapse-content">
         {history.length > 0 ? (
           <>

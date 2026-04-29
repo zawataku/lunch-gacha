@@ -66,9 +66,9 @@ export default function App() {
   };
 
   return (
-    <main className="flex min-h-[101vh] flex-col items-center justify-center bg-base-200 p-8">
+    <main className="flex min-h-screen flex-col items-center justify-center bg-base-200 p-8">
       <div className="relative flex flex-col gap-5 w-full max-w-2xl rounded-xl bg-white px-4 py-12 shadow-lg md:px-12">
-        <h1 className="text-center text-2xl font-bold md:text-4xl">昼ごはんガチャ</h1>
+        <h1 className="text-center text-3xl font-bold md:text-4xl">昼ごはんガチャ</h1>
 
         <GachaMachine
           isSpinning={isSpinning}

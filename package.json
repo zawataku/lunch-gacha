@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "dev:server": "tsx watch --env-file=.env server/index.ts",
+    "dev:server": "npx tsx watch --env-file=.env server/index.ts",
     "build": "tsc && vite build",
     "start": "node dist-server/index.js",
     "lint": "eslint ."
